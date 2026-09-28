@@ -5,7 +5,7 @@
 Construir um pipeline de dados bancários de uma cooperativa financeira
 **fictícia**, seguindo arquitetura medallion (Bronze → Silver → Gold),
 para demonstrar competências de Data Engineering Jr/Pleno: SQL, Python,
-PySpark, Delta Lake, PostgreSQL, ETL/ELT e data quality.
+PySpark, Delta Lake, PostgreSQL, BigQuery, ETL/ELT e data quality.
 
 **Escopo desta versão (v0.1.0 — Etapa 1):** somente ingestão `raw → Bronze`,
 executável 100% local, sem Spark, sem banco e sem cloud.
@@ -50,9 +50,9 @@ Detalhes: ver `docs/architecture.md` e `sql/README.md` (placeholder da Gold).
 | Testes | pytest + pytest-cov | Great Expectations / Pandera |
 | Serving | — | PostgreSQL, Spark SQL |
 | Orquestração | scripts CLI | Airflow |
-| Cloud | — | AWS S3/Glue/Athena, Databricks (com aviso de custo) |
+| Cloud | — | BigQuery sandbox (estágio 5) |
 
-Nenhum recurso cloud é criado nesta etapa. Nenhum custo AWS existe.
+Nenhum recurso cloud é criado nesta etapa. Nenhum custo GCP/BigQuery existe.
 
 ## Estrutura do projeto
 
@@ -124,9 +124,12 @@ Saída esperada da ingestão: 5 tabelas, 328 linhas
 3. **Serving:** carga no PostgreSQL + `sql/` com DDL, views e checks.
 4. **Orquestração/observabilidade:** Airflow + métricas de run
    (conversa com os projetos 2–4 do portfólio).
-5. **Cloud/custo:** S3 + Athena/Databricks com benchmark e estimativa
-   separada de performance vs. custo (projeto 5). Nada será criado sem
-   aviso prévio sobre possível cobrança.
+5. **Cloud/custo (estágio 5, adiado):** GCS + BigQuery sandbox
+   (datasets `bronze`/`silver`/`gold`, tabelas particionadas por
+   `ingestion_date`) com benchmark e estimativa separada de performance
+   vs. custo (projeto 5). Nada será criado antes do estágio 5 — tabelas do
+   sandbox expiram em 60 dias. Nada será criado sem aviso prévio sobre
+   quotas/cobrança.
 
 Todos os dados são sintéticos e fictícios. Nenhum dado real de clientes
 ou bancos é utilizado.
