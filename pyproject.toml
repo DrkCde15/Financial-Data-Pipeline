@@ -1,7 +1,7 @@
 [project]
 name = "financial-data-pipeline"
-version = "0.1.0"
-description = "Pipeline de dados financeiros simulados (cooperativa bancária fictícia): ingestão → Bronze, base para Silver/Gold."
+version = "0.2.0"
+description = "Pipeline de dados financeiros simulados (cooperativa bancária fictícia): Bronze → Silver, base para Gold."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

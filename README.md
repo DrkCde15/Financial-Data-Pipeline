@@ -7,8 +7,9 @@ Construir um pipeline de dados bancários de uma cooperativa financeira
 para demonstrar competências de Data Engineering Jr/Pleno: SQL, Python,
 PySpark, Delta Lake, PostgreSQL, BigQuery, ETL/ELT e data quality.
 
-**Escopo desta versão (v0.1.0 — Etapa 1):** somente ingestão `raw → Bronze`,
-executável 100% local, sem Spark, sem banco e sem cloud.
+**Escopo desta versão (v0.2.0 — Etapas 1–2):** ingestão `raw → Bronze` +
+transformação `Bronze → Silver`, executável 100% local, sem Spark, sem banco
+e sem cloud. Fonte 100% simulada até fechar Silver/Gold (decisão).
 
 ## Problema
 
@@ -24,19 +25,23 @@ e testes automatizados.
 ```text
 JSON/CSV simulado → Ingestão (Python/pandas) → Bronze (Parquet particionado)
                                                         ↓
-                                              Silver (futuro: PySpark/Delta)
+                                              Silver (limpeza + quarentena)
                                                         ↓
                                               Gold (futuro: agregações)
                                                         ↓
                                               PostgreSQL / SQL / relatórios
 ```
 
-Etapa 1 implementada:
+Etapas 1–2 implementadas:
 
 - `scripts/generate_synthetic_data.py` gera 5 tabelas fictícias em `data/raw/`
 - `scripts/run_bronze_ingestion.py` copia para `data/bronze/<tabela>/ingestion_date=.../data.parquet`
 - Bronze adiciona apenas `_ingested_at` e `_source_file` (sem limpeza)
 - Validação de contrato (colunas esperadas) com falha rápida
+- `scripts/run_silver.py` limpa para `data/silver/<tabela>/ingestion_date=.../data.parquet`
+- Silver: dedup por PK, tipagem (`birth_date`/`open_date`→date, `timestamp`→UTC,
+  `amount` round 2 + `is_outlier`, `is_active`→bool), status normalizado,
+  FKs validadas; rejeitos em `data/silver/_quarantine/<tabela>/` com `_quarantine_reason`
 
 Detalhes: ver `docs/architecture.md` e `sql/README.md` (placeholder da Gold).
 
@@ -64,23 +69,26 @@ financial-data-pipeline/
 ├── .gitignore
 ├── data/
 │   ├── raw/        # versionado: branches/products/customers.csv, accounts/transactions.json
-│   └── bronze/     # gerado localmente (gitignored): parquet por tabela/dia
+│   ├── bronze/     # gerado localmente (gitignored): parquet por tabela/dia
+│   └── silver/     # gerado localmente (gitignored): clean + _quarantine por tabela/dia
 ├── src/financial_pipeline/
-│   ├── config.py               # configuração centralizada via .env
-│   └── ingestion/
-│       ├── bronze.py           # raw → bronze (cópia + auditoria + validação)
-│       └── schemas.py          # contrato de colunas + mapa tabela→arquivo
+│   ├── config.py               # configuração centralizada via .env (raw/bronze/silver)
+│   ├── ingestion/
+│   │   ├── bronze.py           # raw → bronze (cópia + auditoria + validação)
+│   │   └── schemas.py          # contrato de colunas + mapa tabela→arquivo
+│   └── transformation/
+│       └── silver.py           # bronze → silver (tipagem + dedup + quarentena + FKs)
 ├── scripts/
 │   ├── generate_synthetic_data.py
-│   └── run_bronze_ingestion.py
+│   ├── run_bronze_ingestion.py
+│   └── run_silver.py
 ├── sql/README.md   # placeholder documentado (Gold/PostgreSQL futuro)
-├── tests/          # test_config + test_bronze_ingestion (10 testes)
+├── tests/          # test_config + test_bronze_ingestion + test_silver (15 testes)
 └── docs/architecture.md
 ```
 
-Diretórios como `notebooks/`, `transformation/`, `silver/`, `gold/` foram
-**omitidos de propósito** — serão criados quando cada etapa começar, para
-evitar placeholders vazios sem função.
+`notebooks/` e `gold/` seguem **omitidos de propósito** — serão criados
+quando cada etapa começar.
 
 ## Como executar
 
@@ -106,19 +114,23 @@ python scripts/run_bronze_ingestion.py
 # Subconjuntos: python scripts/run_bronze_ingestion.py --tables branches customers
 # Repartição fixa: python scripts/run_bronze_ingestion.py --date 2024-01-01
 
-# 6. Testes
+# 6. Transformação bronze → Silver
+python scripts/run_silver.py
+# Subconjuntos: python scripts/run_silver.py --tables transactions
+# Dia específico: python scripts/run_silver.py --date 2024-01-01
+# (default: última partição bronze de cada tabela)
+
+# 7. Testes
 pytest
 ```
 
-Saída esperada da ingestão: 5 tabelas, 328 linhas
-(branches=10, products=6, customers=50, accounts=60, transactions=202).
+Saída esperada: 5 tabelas, 328 linhas Bronze → 328 Silver clean, 0 quarentena
+(branches=10, products=6, customers=50, accounts=60, transactions=202;
+`is_outlier=true` em T999991/T999992 para a Gold).
 
 ## Próximas etapas
 
-1. **Silver (limpeza):** tipagem (`amount`→decimal, `timestamp`→timestamp),
-   tratamento de nulos, remoção de duplicados, normalização de `status`,
-   PySpark + Delta Lake, testes de schema (Pandera/GE).
-2. **Gold (agregações):** volume por dia, saldo médio por agência, clientes
+1. **Gold (agregações):** volume por dia, saldo médio por agência, clientes
    ativos, ticket médio, transações por tipo, detecção de outliers
    (os 2 outliers intencionais em `transactions.json` servem de fixture).
 3. **Serving:** carga no PostgreSQL + `sql/` com DDL, views e checks.

@@ -39,12 +39,14 @@ class Settings:
     project_root: Path
     raw_dir: Path
     bronze_dir: Path
+    silver_dir: Path
     synthetic_seed: int
     log_level: str
 
     def ensure_dirs(self) -> None:
-        """Create runtime output dirs (bronze). Raw must already exist."""
+        """Create runtime output dirs (bronze, silver). Raw must already exist."""
         self.bronze_dir.mkdir(parents=True, exist_ok=True)
+        self.silver_dir.mkdir(parents=True, exist_ok=True)
 
 
 def load_settings() -> Settings:
@@ -62,10 +64,13 @@ def load_settings() -> Settings:
     root = get_project_root()
     raw_dir = Path(os.getenv("RAW_DATA_DIR", "data/raw"))
     bronze_dir = Path(os.getenv("BRONZE_DATA_DIR", "data/bronze"))
+    silver_dir = Path(os.getenv("SILVER_DATA_DIR", "data/silver"))
     if not raw_dir.is_absolute():
         raw_dir = root / raw_dir
     if not bronze_dir.is_absolute():
         bronze_dir = root / bronze_dir
+    if not silver_dir.is_absolute():
+        silver_dir = root / silver_dir
 
     try:
         seed = int(os.getenv("SYNTHETIC_SEED", "42"))
@@ -76,6 +81,7 @@ def load_settings() -> Settings:
         project_root=root,
         raw_dir=raw_dir,
         bronze_dir=bronze_dir,
+        silver_dir=silver_dir,
         synthetic_seed=seed,
         log_level=os.getenv("LOG_LEVEL", "INFO"),
     )
