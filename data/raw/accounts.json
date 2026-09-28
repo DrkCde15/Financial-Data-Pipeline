@@ -1,0 +1,482 @@
+[
+  {
+    "account_id": "A00001",
+    "customer_id": "C0001",
+    "branch_id": "B002",
+    "product_id": "P001",
+    "open_date": "2023-11-27",
+    "status": "active"
+  },
+  {
+    "account_id": "A00002",
+    "customer_id": "C0002",
+    "branch_id": "B002",
+    "product_id": "P001",
+    "open_date": "2023-03-09",
+    "status": "active"
+  },
+  {
+    "account_id": "A00003",
+    "customer_id": "C0003",
+    "branch_id": "B004",
+    "product_id": "P001",
+    "open_date": "2023-12-18",
+    "status": "active"
+  },
+  {
+    "account_id": "A00004",
+    "customer_id": "C0004",
+    "branch_id": "B007",
+    "product_id": "P002",
+    "open_date": "2023-10-07",
+    "status": "active"
+  },
+  {
+    "account_id": "A00005",
+    "customer_id": "C0005",
+    "branch_id": "B003",
+    "product_id": "P001",
+    "open_date": "2023-11-21",
+    "status": "active"
+  },
+  {
+    "account_id": "A00006",
+    "customer_id": "C0006",
+    "branch_id": "B006",
+    "product_id": "P002",
+    "open_date": "2023-05-28",
+    "status": "active"
+  },
+  {
+    "account_id": "A00007",
+    "customer_id": "C0007",
+    "branch_id": "B010",
+    "product_id": "P002",
+    "open_date": "2023-05-02",
+    "status": "active"
+  },
+  {
+    "account_id": "A00008",
+    "customer_id": "C0008",
+    "branch_id": "B007",
+    "product_id": "P001",
+    "open_date": "2023-11-09",
+    "status": "active"
+  },
+  {
+    "account_id": "A00009",
+    "customer_id": "C0009",
+    "branch_id": "B006",
+    "product_id": "P002",
+    "open_date": "2023-09-23",
+    "status": "active"
+  },
+  {
+    "account_id": "A00010",
+    "customer_id": "C0010",
+    "branch_id": "B005",
+    "product_id": "P001",
+    "open_date": "2023-02-03",
+    "status": "inactive"
+  },
+  {
+    "account_id": "A00011",
+    "customer_id": "C0011",
+    "branch_id": "B006",
+    "product_id": "P001",
+    "open_date": "2023-09-02",
+    "status": "active"
+  },
+  {
+    "account_id": "A00012",
+    "customer_id": "C0012",
+    "branch_id": "B002",
+    "product_id": "P001",
+    "open_date": "2023-07-05",
+    "status": "active"
+  },
+  {
+    "account_id": "A00013",
+    "customer_id": "C0013",
+    "branch_id": "B009",
+    "product_id": "P002",
+    "open_date": "2023-01-12",
+    "status": "active"
+  },
+  {
+    "account_id": "A00014",
+    "customer_id": "C0014",
+    "branch_id": "B006",
+    "product_id": "P001",
+    "open_date": "2023-11-04",
+    "status": "active"
+  },
+  {
+    "account_id": "A00015",
+    "customer_id": "C0015",
+    "branch_id": "B006",
+    "product_id": "P002",
+    "open_date": "2023-10-24",
+    "status": "active"
+  },
+  {
+    "account_id": "A00016",
+    "customer_id": "C0016",
+    "branch_id": "B005",
+    "product_id": "P001",
+    "open_date": "2023-03-26",
+    "status": "active"
+  },
+  {
+    "account_id": "A00017",
+    "customer_id": "C0017",
+    "branch_id": "B007",
+    "product_id": "P002",
+    "open_date": "2023-01-06",
+    "status": "active"
+  },
+  {
+    "account_id": "A00018",
+    "customer_id": "C0018",
+    "branch_id": "B001",
+    "product_id": "P002",
+    "open_date": "2023-07-26",
+    "status": "active"
+  },
+  {
+    "account_id": "A00019",
+    "customer_id": "C0019",
+    "branch_id": "B010",
+    "product_id": "P001",
+    "open_date": "2023-05-06",
+    "status": "active"
+  },
+  {
+    "account_id": "A00020",
+    "customer_id": "C0020",
+    "branch_id": "B009",
+    "product_id": "P001",
+    "open_date": "2023-07-28",
+    "status": "active"
+  },
+  {
+    "account_id": "A00021",
+    "customer_id": "C0021",
+    "branch_id": "B006",
+    "product_id": "P002",
+    "open_date": "2023-04-07",
+    "status": "active"
+  },
+  {
+    "account_id": "A00022",
+    "customer_id": "C0022",
+    "branch_id": "B005",
+    "product_id": "P002",
+    "open_date": "2023-06-10",
+    "status": "active"
+  },
+  {
+    "account_id": "A00023",
+    "customer_id": "C0023",
+    "branch_id": "B009",
+    "product_id": "P001",
+    "open_date": "2023-04-01",
+    "status": "active"
+  },
+  {
+    "account_id": "A00024",
+    "customer_id": "C0024",
+    "branch_id": "B009",
+    "product_id": "P002",
+    "open_date": "2023-06-09",
+    "status": "active"
+  },
+  {
+    "account_id": "A00025",
+    "customer_id": "C0025",
+    "branch_id": "B006",
+    "product_id": "P002",
+    "open_date": "2023-06-21",
+    "status": "active"
+  },
+  {
+    "account_id": "A00026",
+    "customer_id": "C0026",
+    "branch_id": "B002",
+    "product_id": "P002",
+    "open_date": "2023-01-04",
+    "status": "active"
+  },
+  {
+    "account_id": "A00027",
+    "customer_id": "C0027",
+    "branch_id": "B009",
+    "product_id": "P002",
+    "open_date": "2023-03-19",
+    "status": "inactive"
+  },
+  {
+    "account_id": "A00028",
+    "customer_id": "C0028",
+    "branch_id": "B009",
+    "product_id": "P002",
+    "open_date": "2023-01-04",
+    "status": "active"
+  },
+  {
+    "account_id": "A00029",
+    "customer_id": "C0029",
+    "branch_id": "B008",
+    "product_id": "P002",
+    "open_date": "2023-12-26",
+    "status": "active"
+  },
+  {
+    "account_id": "A00030",
+    "customer_id": "C0030",
+    "branch_id": "B010",
+    "product_id": "P001",
+    "open_date": "2023-07-19",
+    "status": "active"
+  },
+  {
+    "account_id": "A00031",
+    "customer_id": "C0031",
+    "branch_id": "B001",
+    "product_id": "P001",
+    "open_date": "2023-12-14",
+    "status": "active"
+  },
+  {
+    "account_id": "A00032",
+    "customer_id": "C0032",
+    "branch_id": "B005",
+    "product_id": "P001",
+    "open_date": "2023-06-14",
+    "status": "active"
+  },
+  {
+    "account_id": "A00033",
+    "customer_id": "C0033",
+    "branch_id": "B010",
+    "product_id": "P002",
+    "open_date": "2023-10-11",
+    "status": "active"
+  },
+  {
+    "account_id": "A00034",
+    "customer_id": "C0034",
+    "branch_id": "B007",
+    "product_id": "P001",
+    "open_date": "2023-12-10",
+    "status": "active"
+  },
+  {
+    "account_id": "A00035",
+    "customer_id": "C0035",
+    "branch_id": "B002",
+    "product_id": "P002",
+    "open_date": "2023-06-13",
+    "status": "active"
+  },
+  {
+    "account_id": "A00036",
+    "customer_id": "C0036",
+    "branch_id": "B009",
+    "product_id": "P001",
+    "open_date": "2023-04-14",
+    "status": "active"
+  },
+  {
+    "account_id": "A00037",
+    "customer_id": "C0037",
+    "branch_id": "B002",
+    "product_id": "P002",
+    "open_date": "2023-11-24",
+    "status": "inactive"
+  },
+  {
+    "account_id": "A00038",
+    "customer_id": "C0038",
+    "branch_id": "B001",
+    "product_id": "P002",
+    "open_date": "2023-07-18",
+    "status": "active"
+  },
+  {
+    "account_id": "A00039",
+    "customer_id": "C0039",
+    "branch_id": "B007",
+    "product_id": "P002",
+    "open_date": "2023-05-07",
+    "status": "active"
+  },
+  {
+    "account_id": "A00040",
+    "customer_id": "C0040",
+    "branch_id": "B008",
+    "product_id": "P002",
+    "open_date": "2023-08-15",
+    "status": "active"
+  },
+  {
+    "account_id": "A00041",
+    "customer_id": "C0041",
+    "branch_id": "B004",
+    "product_id": "P001",
+    "open_date": "2023-09-16",
+    "status": "active"
+  },
+  {
+    "account_id": "A00042",
+    "customer_id": "C0042",
+    "branch_id": "B006",
+    "product_id": "P001",
+    "open_date": "2023-11-03",
+    "status": "active"
+  },
+  {
+    "account_id": "A00043",
+    "customer_id": "C0043",
+    "branch_id": "B009",
+    "product_id": "P002",
+    "open_date": "2023-02-27",
+    "status": "inactive"
+  },
+  {
+    "account_id": "A00044",
+    "customer_id": "C0044",
+    "branch_id": "B010",
+    "product_id": "P001",
+    "open_date": "2023-11-10",
+    "status": "active"
+  },
+  {
+    "account_id": "A00045",
+    "customer_id": "C0045",
+    "branch_id": "B010",
+    "product_id": "P001",
+    "open_date": "2023-03-01",
+    "status": "active"
+  },
+  {
+    "account_id": "A00046",
+    "customer_id": "C0046",
+    "branch_id": "B010",
+    "product_id": "P002",
+    "open_date": "2023-10-28",
+    "status": "active"
+  },
+  {
+    "account_id": "A00047",
+    "customer_id": "C0047",
+    "branch_id": "B005",
+    "product_id": "P002",
+    "open_date": "2023-07-21",
+    "status": "active"
+  },
+  {
+    "account_id": "A00048",
+    "customer_id": "C0048",
+    "branch_id": "B002",
+    "product_id": "P002",
+    "open_date": "2023-08-13",
+    "status": "active"
+  },
+  {
+    "account_id": "A00049",
+    "customer_id": "C0049",
+    "branch_id": "B004",
+    "product_id": "P001",
+    "open_date": "2023-02-25",
+    "status": "active"
+  },
+  {
+    "account_id": "A00050",
+    "customer_id": "C0050",
+    "branch_id": "B003",
+    "product_id": "P001",
+    "open_date": "2023-12-17",
+    "status": "active"
+  },
+  {
+    "account_id": "A00051",
+    "customer_id": "C0001",
+    "branch_id": "B002",
+    "product_id": "P001",
+    "open_date": "2023-02-15",
+    "status": "active"
+  },
+  {
+    "account_id": "A00052",
+    "customer_id": "C0002",
+    "branch_id": "B002",
+    "product_id": "P002",
+    "open_date": "2023-11-17",
+    "status": "inactive"
+  },
+  {
+    "account_id": "A00053",
+    "customer_id": "C0003",
+    "branch_id": "B004",
+    "product_id": "P002",
+    "open_date": "2023-08-20",
+    "status": "active"
+  },
+  {
+    "account_id": "A00054",
+    "customer_id": "C0004",
+    "branch_id": "B007",
+    "product_id": "P002",
+    "open_date": "2023-09-15",
+    "status": "active"
+  },
+  {
+    "account_id": "A00055",
+    "customer_id": "C0005",
+    "branch_id": "B003",
+    "product_id": "P002",
+    "open_date": "2023-08-09",
+    "status": "active"
+  },
+  {
+    "account_id": "A00056",
+    "customer_id": "C0006",
+    "branch_id": "B006",
+    "product_id": "P002",
+    "open_date": "2023-09-16",
+    "status": "active"
+  },
+  {
+    "account_id": "A00057",
+    "customer_id": "C0007",
+    "branch_id": "B010",
+    "product_id": "P002",
+    "open_date": "2023-08-03",
+    "status": "active"
+  },
+  {
+    "account_id": "A00058",
+    "customer_id": "C0008",
+    "branch_id": "B007",
+    "product_id": "P001",
+    "open_date": "2023-05-11",
+    "status": "active"
+  },
+  {
+    "account_id": "A00059",
+    "customer_id": "C0009",
+    "branch_id": "B006",
+    "product_id": "P001",
+    "open_date": "2023-03-05",
+    "status": "active"
+  },
+  {
+    "account_id": "A00060",
+    "customer_id": "C0010",
+    "branch_id": "B005",
+    "product_id": "P001",
+    "open_date": "2023-12-07",
+    "status": "active"
+  }
+]

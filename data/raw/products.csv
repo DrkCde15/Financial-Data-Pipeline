@@ -1,0 +1,7 @@
+product_id,product_name,product_type
+P001,Conta Corrente Simples,account
+P002,Conta Poupanca,savings
+P003,Cartao de Credito Basico,card
+P004,Emprestimo Pessoal,loan
+P005,Investimento CDB,investment
+P006,Seguro de Vida,insurance

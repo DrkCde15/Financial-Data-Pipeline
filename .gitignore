@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.env/
+pip-wheel-metadata/
+
+# Ambiente / segredos — NUNCA versionar
+.env
+*.pem
+*.key
+
+# Dados locais (bronze é gerado; raw de exemplo é pequeno e versionado)
+data/bronze/
+data/silver/
+data/gold/
+*.parquet
+!data/raw/.gitkeep
+
+# Testes / cobertura
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Jupyter / Databricks
+.ipynb_checkpoints/
+.databricks/
+.dbfs/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs e temporários
+*.log
+logs/
+tmp/
+temp/

@@ -1,0 +1,32 @@
+[project]
+name = "financial-data-pipeline"
+version = "0.1.0"
+description = "Pipeline de dados financeiros simulados (cooperativa bancária fictícia): ingestão → Bronze, base para Silver/Gold."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pandas>=2.0",
+    "pyarrow>=14.0",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+# Etapas futuras (NÃO instalar agora): Spark/Delta/Postgres/Airflow.
+spark = ["pyspark>=3.5"]
+delta = ["delta-spark>=3.0"]
+postgres = ["psycopg[binary]>=3.1", "SQLAlchemy>=2.0"]
+dev = ["pytest>=8.0", "pytest-cov>=5.0"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.coverage.run]
+source = ["financial_pipeline"]
