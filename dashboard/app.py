@@ -23,7 +23,7 @@ from dashboard.data import filter_period, kpis, load_bq, load_local  # noqa: E40
 
 from financial_pipeline.config import get_project_root  # noqa: E402
 
-st.set_page_config(page_title="Cooperativa — KPIs", layout="wide")
+st.set_page_config(page_title="Data Fin Pipeline", layout="wide")
 st.title("Cooperativa — volume e ticket")
 
 SOURCE = os.getenv("DATA_SOURCE", "bq")
