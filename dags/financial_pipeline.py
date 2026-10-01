@@ -1,11 +1,14 @@
-"""Airflow DAG: financial-data-pipeline (generate -> bronze -> silver -> gold -> postgres).
+"""Airflow DAG: financial-data-pipeline (generate -> bronze -> silver -> gold -> BQ).
 
-Compatível com Airflow 2.6 (PythonOperator/BashOperator clássicos, sem TaskFlow 3.x).
+Serving único: BigQuery sandbox. (O Postgres do compose é só o banco de
+metadados do Airflow — não entra no pipeline.)
+
+Compatível com Airflow 2.6 (BashOperator clássicos, sem TaskFlow 3.x).
 Agendamento diário, backfill por logical date: cada run materializa a partição
 ingestion_date={{ ds }} (idempotente — re-run sobrescreve).
 
-Requer: pip install -e ".[postgres]" + apache-airflow==2.6.* (ver docker-compose.yml).
-Local sem Airflow: rode os mesmos comandos do README na ordem.
+Requer: pip install -e ".[cloud]" + apache-airflow==2.6.* (ver docker-compose.yml).
+BQ usa o ADC do host montado no container. Local sem Airflow: README na ordem.
 """
 
 from __future__ import annotations
@@ -44,20 +47,20 @@ TASK_IDS = [
     "bronze",
     "silver",
     "gold",
-    "load_postgres",
-    "quality_checks",
+    "load_bigquery",
+    "bq_checks",
 ]
 
 if _HAS_AIRFLOW:
     with DAG(
         dag_id="financial_data_pipeline",
-        description="Medallion local: synthetic -> bronze -> silver -> gold -> postgres",
+        description="Medallion: synthetic -> bronze -> silver -> gold -> BigQuery",
         schedule="@daily",
         start_date=datetime(2024, 1, 1),
         catchup=False,
         max_active_runs=1,
         default_args=DEFAULT_ARGS,
-        tags=["medallion", "portfolio", "local"],
+        tags=["medallion", "portfolio", "bigquery"],
     ) as dag:
         generate = BashOperator(
             task_id="generate_synthetic",
@@ -75,13 +78,13 @@ if _HAS_AIRFLOW:
             task_id="gold",
             bash_command=_cmd("run_gold.py"),
         )
-        load = BashOperator(
-            task_id="load_postgres",
-            bash_command=_cmd("load_postgres.py"),
+        bq_load = BashOperator(
+            task_id="load_bigquery",
+            bash_command=_cmd("load_bigquery.py"),
         )
-        checks = BashOperator(
-            task_id="quality_checks",
-            bash_command=_cmd("load_postgres.py", " --checks"),
+        bq_checks = BashOperator(
+            task_id="bq_checks",
+            bash_command=_cmd("load_bigquery.py", " --checks"),
         )
 
-        generate >> bronze >> silver >> gold >> load >> checks
+        generate >> bronze >> silver >> gold >> bq_load >> bq_checks

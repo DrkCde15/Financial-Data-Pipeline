@@ -1,7 +1,7 @@
 [project]
 name = "financial-data-pipeline"
-version = "0.4.0"
-description = "Pipeline de dados financeiros simulados (cooperativa bancária fictícia): Bronze → Silver → Gold → Postgres, com Airflow."
+version = "0.6.0"
+description = "Pipeline de dados financeiros simulados (cooperativa bancária fictícia): Bronze → Silver → Gold → BigQuery, com Airflow."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -11,10 +11,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Etapas futuras (NÃO instalar agora): Spark/Delta.
+# Futuro (NÃO instalar agora): Spark/Delta.
 spark = ["pyspark>=3.5"]
 delta = ["delta-spark>=3.0"]
-postgres = ["psycopg[binary]>=3.1", "SQLAlchemy>=2.0"]
+cloud = ["google-cloud-bigquery>=3.0"]
 orchestration = ["apache-airflow==2.6.*"]
 dev = ["pytest>=8.0", "pytest-cov>=5.0"]
 

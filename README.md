@@ -5,12 +5,13 @@
 Construir um pipeline de dados bancários de uma cooperativa financeira
 **fictícia**, seguindo arquitetura medallion (Bronze → Silver → Gold),
 para demonstrar competências de Data Engineering Jr/Pleno: SQL, Python,
-PySpark, Delta Lake, PostgreSQL, BigQuery, ETL/ELT e data quality.
+PySpark, Delta Lake, BigQuery, ETL/ELT e data quality.
 
-**Escopo desta versão (v0.4.0 — pipeline local completo):**
-`raw → Bronze → Silver → Gold → PostgreSQL`, agendado por Airflow 2.6,
-executável local via `docker compose`, sem Spark e sem cloud.
-Fonte 100% simulada (decisão até o estágio 5).
+**Escopo desta versão (v0.6.0 — pipeline completo + cloud):**
+`raw → Bronze → Silver → Gold → BigQuery sandbox`,
+agendado por Airflow 2.6, executável local via `podman compose`, sem Spark.
+Fonte 100% simulada. Serving único: BigQuery (o Postgres do compose é só
+o banco de metadados do Airflow — não entra no pipeline).
 
 ## Problema
 
@@ -26,7 +27,7 @@ e testes automatizados.
 ```text
 JSON/CSV simulado → Bronze (Parquet) → Silver (limpeza+quarentena) → Gold (4 marts)
                                                                               ↓
-                                                     PostgreSQL (DDL+views+checks)
+                                                     BigQuery sandbox (14 tabs + views + checks)
                                                                               ▲
                                               Airflow 2.6 @daily (6 tasks, {{ ds }})
 ```
@@ -42,33 +43,31 @@ Etapas implementadas:
   `amount` round 2 + `is_outlier`, `is_active`→bool), status normalizado,
   FKs validadas; rejeitos em `data/silver/_quarantine/<tabela>/` com `_quarantine_reason`
 - `scripts/run_gold.py` agrega para `data/gold/<tabela>/ingestion_date=.../data.parquet`
-  (só calcula — não encosta no banco; roda sem Postgres)
+  (só calcula — não encosta no banco)
 - Gold (grão declarado, completed excl. outliers nas médias):
   `fact_daily_volume(transaction_date)`, `agg_transaction_type(transaction_type)`,
   `agg_branch(branch_id)`, `outliers(transaction_id)` enriquecida p/ investigação
-- `scripts/load_postgres.py` carrega Gold (parquet) → PostgreSQL (DELETE+INSERT por
-  `ingestion_date`, idempotente) + `sql/ddl`, `sql/views` (v_* sobre
-  `max(ingestion_date)`), `sql/quality_checks` (01–03: 0 rows = pass; 04: frescor).
-  Separado da Gold de propósito: permite recarregar o banco sem recomputar e
-  auditar o dado servido (não o arquivo)
+- `scripts/load_bigquery.py` carrega as 3 camadas → BigQuery `engdta`
+  (load jobs Parquet WRITE_TRUNCATE por tabela, idempotente) + `sql/bigquery`
+  (views v_* sobre `max(ingestion_date)`, checks 01–03: 0 rows = pass; 04: frescor)
 - `dags/financial_pipeline.py` (Airflow 2.6): 6 tasks
-  `generate >> bronze >> silver >> gold >> load >> checks`, retries=2, `@daily`
+  `generate >> bronze >> silver >> gold >> bq_load >> bq_checks`, retries=2, `@daily`
 
 Detalhes: ver `docs/architecture.md` e `sql/README.md`.
 
 ## Tecnologias
 
-| Camada | v0.4.0 (atual) | Futuro (planejado) |
+| Camada | v0.6.0 (atual) | Futuro (planejado) |
 |--------|-----------------|-------------------|
 | Linguagem | Python 3.10+ (type hints, pathlib, logging) | PySpark (adiado — over-engineering p/ 328 linhas) |
 | Ingestão/Transformação | pandas + pyarrow (Parquet) | Delta Lake |
-| Config | python-dotenv + `.env` (`DATABASE_URL`, `*_DATA_DIR`) | — |
-| Testes | pytest + pytest-cov (26 testes; Postgres via SQLite) | Great Expectations / Pandera |
-| Serving | PostgreSQL 15 (`sql/ddl`, `views`, `quality_checks`) + `load_postgres.py` | BI (Power BI/Looker) |
-| Orquestração | Airflow 2.6 (`dags/`, `docker-compose.yml`) | — |
-| Cloud | — | BigQuery sandbox (estágio 5) |
+| Config | python-dotenv + `.env` (`GCP_PROJECT`, `*_DATA_DIR`) | — |
+| Testes | pytest + pytest-cov (BQ mockado, sem sandbox no CI) | Great Expectations / Pandera |
+| Serving | BigQuery sandbox `engdta` (`sql/bigquery`, `load_bigquery.py` via lib) | BI (Power BI/Looker) |
+| Orquestração | Airflow 2.6 (`dags/`, 6 tasks, `docker-compose.yml`, podman) | — |
+| Cloud extra | — | Benchmark pago / particionamento (fora do sandbox) |
 
-Nenhum recurso cloud é criado nesta etapa. Nenhum custo GCP/BigQuery existe.
+Sandbox é grátis (free tier: 1 TiB queries + 10 GiB/mês); o projeto ocupa ~88 KiB.
 
 ## Estrutura do projeto
 
@@ -95,21 +94,21 @@ financial-data-pipeline/
 │   ├── generate_synthetic_data.py
 │   ├── run_bronze_ingestion.py
 │   ├── run_silver.py
-│   └── run_gold.py
+│   ├── run_gold.py
+│   └── load_bigquery.py  # camadas locais → BQ (load jobs WRITE_TRUNCATE + checks)
 ├── sql/
 │   ├── README.md
-│   ├── ddl/            # 001_gold.sql (4 tabelas, NUMERIC p/ dinheiro, PK por dia)
-│   ├── views/          # v_daily_volume, v_branch_ranking, v_ticket_by_type, v_kpis
-│   └── quality_checks/ # 01_dup_pks, 02_null_keys, 03_business_rules, 04_freshness
+│   └── bigquery/
+│       ├── views/          # v_daily_volume, v_branch_ranking, v_ticket_by_type, v_kpis
+│       └── checks/         # 01_dup_pks, 02_null_keys, 03_business_rules, 04_freshness
 ├── dags/
-│   └── financial_pipeline.py  # Airflow 2.6 (6 tasks, retries=2, @daily)
-├── docker-compose.yml  # postgres:15 + airflow:2.6.3 (LocalExecutor)
-├── tests/          # config + bronze + silver + gold + load_postgres + dag (26 testes)
+│   └── financial_pipeline.py  # Airflow 2.6 (6 tasks lineares, retries=2, @daily)
+├── docker-compose.yml  # postgres:15 (só metadados do Airflow) + airflow:2.6.3
+├── tests/          # config + bronze + silver + gold + bigquery + dag
 └── docs/architecture.md
 ```
 
-`notebooks/` e `gold/` seguem **omitidos de propósito** — serão criados
-quando cada etapa começar.
+`notebooks/` segue **omitido de propósito** — será criado na etapa BI.
 
 ## Como executar
 
@@ -145,39 +144,32 @@ python scripts/run_silver.py
 python scripts/run_gold.py
 # Subconjuntos: python scripts/run_gold.py --tables fact_daily_volume outliers
 
-# 8. Serving local (sem Docker: SQLite; com Docker: Postgres)
-pip install -e ".[postgres]"  # psycopg + SQLAlchemy (só p/ Postgres real)
-export DATABASE_URL=sqlite:////tmp/finance.db  # testes locais
-python scripts/load_postgres.py                # DDL + carga (46 linhas)
-python scripts/load_postgres.py --checks       # 01–03: 0 violações = pass
+# 8. Serving — BigQuery sandbox (extra `cloud`)
+pip install -e ".[cloud]"                       # google-cloud-bigquery
+gcloud auth application-default login          # ADC (uma vez; no Airflow vai via mount)
+python scripts/load_bigquery.py            # datasets + 14 tabelas + views
+python scripts/load_bigquery.py --checks   # 01–03: 0 violações = pass
+# Só Gold/serving: python scripts/load_bigquery.py --layer gold
 
-# Com Docker (requer Docker instalado):
-docker compose up -d
-export DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/finance
-python scripts/load_postgres.py && python scripts/load_postgres.py --checks
+# 9. Orquestração (requer podman/docker)
+podman compose up -d
 # Airflow UI: http://localhost:8080 (admin/admin) → ative financial_data_pipeline
 
-# 9. Testes
+# 10. Testes
 pytest
 ```
 
 Saída esperada: 5 tabelas, 328 linhas Bronze → 328 Silver clean, 0 quarentena
 → Gold: `fact_daily_volume=28`, `agg_transaction_type=6`, `agg_branch=10`,
 `outliers=2` (T999991/T999992 enriquecidos p/ investigação)
-→ Postgres: 46 linhas (28+6+10+2), checks 01–03 com 0 violações.
+→ BigQuery `engdta` (US, sandbox): 14 tabelas (702 linhas) + 4 views, checks zerados.
 
 ## Próximas etapas
 
-1. **BI/observabilidade:** dashboards sobre as views + métricas de run/alertas
+1. **BI/observabilidade:** dashboards nas views + métricas de run/alertas
    (conversa com o projeto 4 do portfólio).
-2. **Orquestração/observabilidade:** Airflow + métricas de run
-   (conversa com os projetos 2–4 do portfólio).
-3. **Cloud/custo (estágio 5, adiado):** GCS + BigQuery sandbox
-   (datasets `bronze`/`silver`/`gold`, tabelas particionadas por
-   `ingestion_date`) com benchmark e estimativa separada de performance
-   vs. custo (projeto 5). Nada será criado antes do estágio 5 — tabelas do
-   sandbox expiram em 60 dias. Nada será criado sem aviso prévio sobre
-   quotas/cobrança.
+2. **Fora do sandbox (futuro pago):** particionamento por `ingestion_date`,
+   IAM por dataset e benchmark de custo (projeto 5).
 
 Todos os dados são sintéticos e fictícios. Nenhum dado real de clientes
 ou bancos é utilizado.

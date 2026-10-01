@@ -1,13 +1,16 @@
-# Postgres + Airflow 2.6 (LocalExecutor). Sem docker nesta máquina? Instale
-# o Docker e rode `docker compose up -d` a partir desta pasta.
+# Postgres + Airflow 2.6 (LocalExecutor).
+# O Postgres aqui é SÓ o banco de metadados do Airflow — não entra no
+# pipeline. O serving é 100% BigQuery sandbox (ver README).
+# Com podman: `podman compose up -d` a partir desta pasta.
 #
 # Serviços:
-#   postgres  — banco serving (finance), porta 5432
+#   postgres  — metadados do Airflow (db airflow), porta 5432
 #   airflow   — scheduler+webserver standalone (airflow 2.6.3), porta 8080
 #               user/senha: admin/admin (TROQUE em produção)
 #
 # O DAG monta o repo em /opt/airflow/financial-data-pipeline e executa os
-# mesmos scripts do README (generate -> bronze -> silver -> gold -> postgres).
+# mesmos scripts do README (generate -> bronze -> silver -> gold -> postgres/BQ).
+# BQ usa o ADC do host montado em ~/.config/gcloud (só leitura).
 
 x-airflow-env: &airflow-env
   AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -15,8 +18,11 @@ x-airflow-env: &airflow-env
   AIRFLOW__CORE__LOAD_EXAMPLES: "false"
   AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
   FINANCIAL_PIPELINE_ROOT: /opt/airflow/financial-data-pipeline
-  DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/finance
   PYTHONPATH: /opt/airflow/financial-data-pipeline/src
+  GCP_PROJECT: engdta
+  BQ_LOCATION: US
+  # ADC do host (gcloud auth application-default login) p/ tasks do BigQuery.
+  GOOGLE_APPLICATION_CREDENTIALS: /home/airflow/.config/gcloud/application_default_credentials.json
 
 services:
   postgres:
@@ -69,7 +75,8 @@ services:
       - ./src:/opt/airflow/financial-data-pipeline/src
       - ./data:/opt/airflow/financial-data-pipeline/data
       - ./sql:/opt/airflow/financial-data-pipeline/sql
-    command: bash -c "pip install -q pandas pyarrow SQLAlchemy 'psycopg2-binary' && airflow standalone"
+      - ~/.config/gcloud:/home/airflow/.config/gcloud:ro
+    command: bash -c "pip install -q pandas pyarrow google-cloud-bigquery && airflow standalone"
 
 volumes:
   pgdata:

@@ -1,15 +1,8 @@
-# Base — Etapas 1–2 (raw → Bronze → Silver, local)
-# Espelha as dependências de `pyproject.toml`
 pandas>=2.0
 pyarrow>=14.0
 python-dotenv>=1.0
-
-# Dev/testes
 pytest>=8.0
 pytest-cov>=5.0
-
-# Futuro (NÃO instalar agora — ver pyproject.toml optional-dependencies):
-# pyspark>=3.5
-# delta-spark>=3.0
-# psycopg[binary]>=3.1
-# SQLAlchemy>=2.0
+google-cloud-bigquery>=3.0
+pyspark>=3.5
+delta-spark>=3.0

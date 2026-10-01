@@ -3,10 +3,10 @@
 ## 1. Objetivo
 
 Construir um pipeline medallion (Bronze → Silver → Gold) sobre dados
-bancários **fictícios** de uma cooperativa, executável localmente e
-evolutivo para PySpark, Delta Lake, PostgreSQL e BigQuery (sandbox, estágio 5).
+bancários **fictícios** de uma cooperativa, com serving no BigQuery sandbox,
+evolutivo para PySpark e Delta Lake.
 
-## 2. Status atual — Etapas 1–5 locais (implementadas, v0.4.0)
+## 2. Status atual (v0.6.0 — pipeline completo, serving único BQ)
 
 ```text
 data/raw/*.csv|*.json  (simula API/CSV/JSON)
@@ -22,13 +22,11 @@ data/silver/<tabela>/ingestion_date=YYYY-MM-DD/data.parquet (+ _quarantine/)
         │  scripts/run_gold.py
         ▼
 data/gold/<tabela>/ingestion_date=YYYY-MM-DD/data.parquet (4 marts)
-        │  scripts/load_postgres.py ($DATABASE_URL, DELETE+INSERT por dia)
+        │  scripts/load_bigquery.py (load jobs WRITE_TRUNCATE por tabela)
         ▼
-PostgreSQL (fact_daily_volume, agg_transaction_type, agg_branch, outliers)
-  + views (v_daily_volume, v_branch_ranking, v_ticket_by_type, v_kpis)
-  + quality_checks (01–04)
+BigQuery engdta.{bronze,silver,gold} (14 tabs + views v_* + checks 01–04)
         ▲ agendado por
-dags/financial_pipeline.py (Airflow 2.6, @daily, backfill por {{ ds }})
+dags/financial_pipeline.py (Airflow 2.6, 6 tasks lineares, @daily, {{ ds }})
 ```
 
 Regras da Bronze (propositalmente mínimas):
@@ -40,23 +38,25 @@ Regras da Bronze (propositalmente mínimas):
 - Re-execução idempotente (sobrescreve a partição do dia).
 - Formato Parquet (transição natural para load via GCS → BigQuery no estágio 5).
 
-## 3. Status por etapa (v0.4.0)
+## 3. Status por etapa (v0.6.0)
 
 | Etapa | Status | Escopo / tecnologia |
 |-------|--------|---------------------|
-| Silver | ✅ implementada (v0.2.0, pandas) | Tipagem, dedup por PK, quarentena, FKs. PySpark/Delta/GE adiados (over-engineering p/ 328 linhas) |
-| Gold | ✅ implementada (v0.3.0, pandas) | `fact_daily_volume`, `agg_transaction_type`, `agg_branch`, `outliers` — médias excl. outliers |
-| Serving | ✅ implementada (v0.4.0) | Postgres 15 (`sql/ddl`, `views` v_*, `quality_checks` 01–04) + `scripts/load_postgres.py` (DELETE+INSERT por dia, SQLite nos testes) |
-| Orquestração | ✅ implementada (v0.4.0) | Airflow 2.6 (`dags/financial_pipeline.py`, 6 tasks, retries=2, `@daily`, backfill `{{ ds }}`) + `docker-compose.yml` (postgres + airflow) |
+| Bronze→Silver→Gold | ✅ pandas local | Tipagem, dedup, quarentena, FKs; 4 marts com grão declarado |
+| Serving | ✅ BigQuery sandbox (único) | `engdta.{bronze,silver,gold}` via load jobs WRITE_TRUNCATE + `sql/bigquery` (views + checks 01–04). Postgres removido em v0.6.0 (era dual serving; BQ cobre o caso) |
+| Orquestração | ✅ Airflow 2.6 | DAG linear 6 tasks, retries=2, `@daily`, backfill `{{ ds }}` + compose (postgres só metadados, podman) |
 | Observabilidade | Métricas de run, alertas | Projeto 4 do portfólio |
-| Cloud (estágio 5) | GCS (staging) + BigQuery sandbox → datasets bronze/silver/gold | Projeto 5 — adiado de propósito (sandbox expira em 60 dias; com aviso prévio de custo/quotas) |
+| Fora do sandbox | Particionamento, IAM, benchmark pago | Projeto 5 |
 
 ## 4. Decisões técnicas
 
 - **Sem Spark nesta etapa:** pandas + pyarrow são suficientes para < 1k linhas
   e mantêm o projeto leve e executável em qualquer máquina.
-- **Parquet na Bronze:** preserva tipos e prepara o load futuro
-  (GCS → BigQuery, estágio 5) sem reescrever a ingestão.
+- **Parquet nas camadas:** preserva tipos e alimenta o BQ via load jobs
+  sem etapa intermediária.
+- **Serving único BQ (decisão v0.6.0):** Postgres removido — dual serving
+  dobrava loaders e dialetos SQL sem cobrir caso novo. O Postgres do compose
+  segue existindo, mas só como metadados do Airflow (infra, não pipeline).
 - **Config centralizada (`config.py`):** caminhos via `.env`, nunca hardcoded.
 - **Dados 100% sintéticos:** nenhum dado real; 2 outliers intencionais em
   `transactions.json` preservados na Silver com `is_outlier=true` para a Gold.
@@ -64,10 +64,12 @@ Regras da Bronze (propositalmente mínimas):
   `silver/_quarantine/<tabela>/` (parquet all-string, diagnóstico) com
   `_quarantine_reason` (`null_<pk>`, `invalid_*`, `fk_*_missing`).
 - **Diretórios omitidos de propósito:** `notebooks/` só será criado na etapa BI.
-- **Cloud só no estágio 5 (decisão):** BigQuery sandbox já disponível
-  (`engdta.staging`), mas nenhum dataset `bronze/silver/gold` será criado
-  antes do estágio 5 — tabelas do sandbox expiram em 60 dias e o free tier
-  (1 TiB queries + 10 GiB/mês) deve ser preservado para o benchmark de custo.
+- **Cloud no sandbox:** `engdta.{bronze,silver,gold}` criados com
+  expiração default de 60 dias (regra do sandbox). Carga via load jobs Parquet
+  WRITE_TRUNCATE (batch, grátis) em vez de DML (restrito no sandbox).
+  `ingestion_date` como coluna STRING de linhagem — particionamento físico
+  fica p/ fora do sandbox. Lib `google-cloud-bigquery` (a imagem do Airflow
+  já traz; credenciais via ADC montado).
 
 ## 5. Contratos de dados
 

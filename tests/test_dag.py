@@ -14,8 +14,8 @@ EXPECTED_TASKS = [
     "bronze",
     "silver",
     "gold",
-    "load_postgres",
-    "quality_checks",
+    "load_bigquery",
+    "bq_checks",
 ]
 
 
@@ -27,11 +27,12 @@ def test_dag_file_exists_and_parses() -> None:
 
 
 def test_dag_declares_expected_tasks_in_order() -> None:
-    """All 6 task_ids declared; chain generate >> bronze >> ... >> checks."""
+    """As 6 task_ids em cadeia linear até o BQ (serving único)."""
     src = DAG_FILE.read_text(encoding="utf-8")
     for t in EXPECTED_TASKS:
         assert f'task_id="{t}"' in src, f"task {t!r} missing in DAG"
-    assert "generate >> bronze >> silver >> gold >> load >> checks" in src
+    assert "generate >> bronze >> silver >> gold >> bq_load >> bq_checks" in src
+    assert "load_postgres" not in src, "serving Postgres foi removido"
 
 
 def test_dag_targets_airflow_26_api() -> None:
@@ -43,8 +44,9 @@ def test_dag_targets_airflow_26_api() -> None:
 
 
 def test_compose_declares_postgres_and_airflow_26() -> None:
-    """docker-compose must wire postgres:15 + airflow:2.6.3."""
+    """Compose: postgres:15 (só metadados do Airflow) + airflow:2.6.3 + ADC p/ BQ."""
     compose = (get_project_root() / "docker-compose.yml").read_text(encoding="utf-8")
     assert "postgres:15" in compose
     assert "apache/airflow:2.6.3" in compose
-    assert "DATABASE_URL" in compose
+    assert "DATABASE_URL" not in compose, "serving Postgres foi removido"
+    assert ".config/gcloud" in compose
