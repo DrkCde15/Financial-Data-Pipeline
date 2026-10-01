@@ -3,8 +3,7 @@
 ## 1. Objetivo
 
 Construir um pipeline medallion (Bronze → Silver → Gold) sobre dados
-bancários **fictícios** de uma cooperativa, com serving no BigQuery sandbox,
-evolutivo para PySpark e Delta Lake.
+bancários **fictícios** de uma cooperativa, com serving no BigQuery sandbox.
 
 ## 2. Status atual (v0.6.0 — pipeline completo, serving único BQ)
 
@@ -52,8 +51,8 @@ Regras da Bronze (propositalmente mínimas):
 
 ## 4. Decisões técnicas
 
-- **Sem Spark nesta etapa:** pandas + pyarrow são suficientes para < 1k linhas
-  e mantêm o projeto leve e executável em qualquer máquina.
+- **pandas + pyarrow:** suficientes para < 1k linhas e mantêm o projeto
+  leve e executável em qualquer máquina.
 - **Parquet nas camadas:** preserva tipos e alimenta o BQ via load jobs
   sem etapa intermediária.
 - **Serving único BQ (decisão v0.6.0):** Postgres removido — dual serving

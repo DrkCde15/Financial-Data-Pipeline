@@ -9,7 +9,7 @@ Bronze semantics (intentionally minimal):
   - Overwrites the day partition (idempotent re-runs).
 
 Future stages (NOT implemented here):
-  - Silver: PySpark + Delta Lake cleaning/typing/dedup.
+  - Silver: cleaning/typing/dedup.
   - Gold: aggregations + PostgreSQL serving.
 """
 

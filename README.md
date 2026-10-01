@@ -4,12 +4,12 @@
 
 Construir um pipeline de dados bancários de uma cooperativa financeira
 **fictícia**, seguindo arquitetura medallion (Bronze → Silver → Gold),
-para demonstrar competências de Data Engineering Jr/Pleno: SQL, Python,
-PySpark, Delta Lake, BigQuery, ETL/ELT e data quality.
+com ingestão idempotente, contratos de dados, testes automatizados e
+serving no BigQuery.
 
 **Escopo desta versão (v0.7.0 — pipeline + BI como código):**
 `raw → Bronze → Silver → Gold → BigQuery sandbox → Streamlit`,
-agendado por Airflow 2.6, executável local via `podman compose`, sem Spark.
+agendado por Airflow 2.6 e executável local via `podman compose`.
 Fonte 100% simulada. Serving único: BigQuery (o Postgres do compose é só
 o banco de metadados do Airflow — não entra no pipeline).
 
@@ -59,8 +59,8 @@ Detalhes: ver `docs/architecture.md` e `sql/README.md`.
 
 | Camada | v0.6.0 (atual) | Futuro (planejado) |
 |--------|-----------------|-------------------|
-| Linguagem | Python 3.10+ (type hints, pathlib, logging) | PySpark (adiado — over-engineering p/ 328 linhas) |
-| Ingestão/Transformação | pandas + pyarrow (Parquet) | Delta Lake |
+| Linguagem | Python 3.10+ (type hints, pathlib, logging) | — |
+| Ingestão/Transformação | pandas + pyarrow (Parquet) | — |
 | Config | python-dotenv + `.env` (`GCP_PROJECT`, `*_DATA_DIR`) | — |
 | Testes | pytest + pytest-cov (BQ mockado, sem sandbox no CI) | Great Expectations / Pandera |
 | Serving | BigQuery sandbox `engdta` (`sql/bigquery`, `load_bigquery.py` via lib) | — |

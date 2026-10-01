@@ -11,9 +11,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Futuro (NÃO instalar agora): Spark/Delta.
-spark = ["pyspark>=3.5"]
-delta = ["delta-spark>=3.0"]
 cloud = ["google-cloud-bigquery>=3.0", "db-dtypes>=1.0"]
 dashboard = ["streamlit>=1.32", "google-cloud-bigquery>=3.0", "db-dtypes>=1.0"]
 orchestration = ["apache-airflow==2.6.*"]
