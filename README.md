@@ -1,4 +1,4 @@
-# Pipeline de Dados Financeiros Simulado
+# Pipeline de Dados Financeiros
 
 ## Objetivo
 
@@ -173,13 +173,3 @@ Saída esperada: 5 tabelas, 328 linhas Bronze → 328 Silver clean, 0 quarentena
 → Gold: `fact_daily_volume=28`, `agg_transaction_type=6`, `agg_branch=10`,
 `outliers=2` (T999991/T999992 enriquecidos p/ investigação)
 → BigQuery `engdta` (US, sandbox): 14 tabelas (702 linhas) + 4 views, checks zerados.
-
-## Próximas etapas
-
-1. **BI/observabilidade:** dashboards nas views + métricas de run/alertas
-   (conversa com o projeto 4 do portfólio).
-2. **Fora do sandbox (futuro pago):** particionamento por `ingestion_date`,
-   IAM por dataset e benchmark de custo (projeto 5).
-
-Todos os dados são sintéticos e fictícios. Nenhum dado real de clientes
-ou bancos é utilizado.
