@@ -1,22 +1,14 @@
-# sql/ — placeholder documentado
+# sql/ — Gold no PostgreSQL (etapa Serving, implementada v0.4.0)
 
-Esta pasta está reservada para a etapa **Gold / PostgreSQL** (futura).
+- `ddl/001_gold.sql` — 4 tabelas (`fact_daily_volume`, `agg_transaction_type`,
+  `agg_branch`, `outliers`): `NUMERIC(18,2)` p/ dinheiro, `TIMESTAMPTZ` p/ eventos,
+  PK `(chave, ingestion_date)`, índices p/ dashboard. DDL roda em Postgres **e**
+  SQLite (testes) — `DEFAULT CURRENT_TIMESTAMP` nos dois.
+- `views/001_gold_views.sql` — `v_daily_volume`, `v_branch_ranking`,
+  `v_ticket_by_type`, `v_kpis` (sempre sobre `max(ingestion_date)`).
+- `quality_checks/` — `01_dup_pks`, `02_null_keys`, `03_business_rules`
+  (0 rows = pass), `04_freshness` (reporta `days_stale`).
 
-Nada foi criado aqui na etapa 1 (ingestão → Bronze) de propósito:
-o pipeline ainda não possui camada Silver/Gold nem banco relacional.
-
-Planejado para etapas futuras:
-
-- `ddl/` — DDL das tabelas Gold (ex.: `fact_transactions_daily`, `dim_customers`)
-- `views/` — views analíticas (volume por dia, saldo médio por agência, ticket médio)
-- `quality_checks/` — consultas de data quality (nulos, duplicados, outliers)
-- `seeds/` — cargas iniciais pequenas, se necessário
-
-Enquanto isso, as análises futuras previstas são:
-
-- volume de transações por dia
-- saldo médio por agência
-- quantidade de clientes ativos
-- ticket médio
-- transações por tipo
-- valores suspeitos/outliers
+Loader: `scripts/load_postgres.py` (`DATABASE_URL`, DELETE+INSERT por
+`ingestion_date`, idempotente). Testes com SQLite, produção no Postgres do
+`docker-compose.yml`.

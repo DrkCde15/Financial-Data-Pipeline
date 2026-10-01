@@ -13,11 +13,12 @@ def test_get_project_root_contains_pyproject() -> None:
 
 
 def test_load_settings_defaults() -> None:
-    """Default settings resolve to <root>/data/raw, bronze and silver."""
+    """Default settings resolve to <root>/data/raw, bronze, silver and gold."""
     settings = load_settings()
     assert settings.raw_dir == settings.project_root / "data" / "raw"
     assert settings.bronze_dir == settings.project_root / "data" / "bronze"
     assert settings.silver_dir == settings.project_root / "data" / "silver"
+    assert settings.gold_dir == settings.project_root / "data" / "gold"
     assert settings.synthetic_seed == 42
     assert settings.log_level.upper() in ("DEBUG", "INFO", "WARNING", "ERROR")
 

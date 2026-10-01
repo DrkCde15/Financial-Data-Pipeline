@@ -6,7 +6,7 @@ Construir um pipeline medallion (Bronze → Silver → Gold) sobre dados
 bancários **fictícios** de uma cooperativa, executável localmente e
 evolutivo para PySpark, Delta Lake, PostgreSQL e BigQuery (sandbox, estágio 5).
 
-## 2. Status atual — Etapas 1–2 (implementadas)
+## 2. Status atual — Etapas 1–5 locais (implementadas, v0.4.0)
 
 ```text
 data/raw/*.csv|*.json  (simula API/CSV/JSON)
@@ -14,14 +14,21 @@ data/raw/*.csv|*.json  (simula API/CSV/JSON)
         ▼
 data/raw/              (branches, products, customers, accounts, transactions)
         │  scripts/run_bronze_ingestion.py
-        │  src/financial_pipeline/ingestion/bronze.py
         ▼
 data/bronze/<tabela>/ingestion_date=YYYY-MM-DD/data.parquet
         │  scripts/run_silver.py
-        │  src/financial_pipeline/transformation/silver.py
         ▼
-data/silver/<tabela>/ingestion_date=YYYY-MM-DD/data.parquet
-data/silver/_quarantine/<tabela>/ingestion_date=YYYY-MM-DD/data.parquet
+data/silver/<tabela>/ingestion_date=YYYY-MM-DD/data.parquet (+ _quarantine/)
+        │  scripts/run_gold.py
+        ▼
+data/gold/<tabela>/ingestion_date=YYYY-MM-DD/data.parquet (4 marts)
+        │  scripts/load_postgres.py ($DATABASE_URL, DELETE+INSERT por dia)
+        ▼
+PostgreSQL (fact_daily_volume, agg_transaction_type, agg_branch, outliers)
+  + views (v_daily_volume, v_branch_ranking, v_ticket_by_type, v_kpis)
+  + quality_checks (01–04)
+        ▲ agendado por
+dags/financial_pipeline.py (Airflow 2.6, @daily, backfill por {{ ds }})
 ```
 
 Regras da Bronze (propositalmente mínimas):
@@ -33,16 +40,16 @@ Regras da Bronze (propositalmente mínimas):
 - Re-execução idempotente (sobrescreve a partição do dia).
 - Formato Parquet (transição natural para load via GCS → BigQuery no estágio 5).
 
-## 3. Próximas etapas (Silver implementada)
+## 3. Status por etapa (v0.4.0)
 
 | Etapa | Status | Escopo / tecnologia |
 |-------|--------|---------------------|
-| Silver | ✅ implementada (v0.2.0, pandas) | Tipagem (`birth_date`/`open_date`→date, `timestamp`→UTC, `amount` round 2 + `is_outlier`, `is_active`→bool), dedup por PK, quarentena (PK nula, tipo inválido, status inválido, FK órfã). PySpark/Delta/GE seguem adiados (over-engineering p/ 328 linhas) |
-| Gold | NÃO implementada | Agregações (volume/dia, ticket médio, clientes ativos, outliers) |
-| Serving | Consultas SQL + relatórios | PostgreSQL, notebooks, Power BI/Looker |
-| Orquestração | Agendamento e retries | Airflow |
+| Silver | ✅ implementada (v0.2.0, pandas) | Tipagem, dedup por PK, quarentena, FKs. PySpark/Delta/GE adiados (over-engineering p/ 328 linhas) |
+| Gold | ✅ implementada (v0.3.0, pandas) | `fact_daily_volume`, `agg_transaction_type`, `agg_branch`, `outliers` — médias excl. outliers |
+| Serving | ✅ implementada (v0.4.0) | Postgres 15 (`sql/ddl`, `views` v_*, `quality_checks` 01–04) + `scripts/load_postgres.py` (DELETE+INSERT por dia, SQLite nos testes) |
+| Orquestração | ✅ implementada (v0.4.0) | Airflow 2.6 (`dags/financial_pipeline.py`, 6 tasks, retries=2, `@daily`, backfill `{{ ds }}`) + `docker-compose.yml` (postgres + airflow) |
 | Observabilidade | Métricas de run, alertas | Projeto 4 do portfólio |
-| Cloud (estágio 5) | GCS (staging) + BigQuery sandbox → datasets bronze/silver/gold | Projeto 5 do portfólio — adiado de propósito (sandbox expira em 60 dias; com aviso prévio de custo/quotas) |
+| Cloud (estágio 5) | GCS (staging) + BigQuery sandbox → datasets bronze/silver/gold | Projeto 5 — adiado de propósito (sandbox expira em 60 dias; com aviso prévio de custo/quotas) |
 
 ## 4. Decisões técnicas
 
@@ -56,8 +63,7 @@ Regras da Bronze (propositalmente mínimas):
 - **Quarentena, não drop silencioso:** linhas rejeitadas vão para
   `silver/_quarantine/<tabela>/` (parquet all-string, diagnóstico) com
   `_quarantine_reason` (`null_<pk>`, `invalid_*`, `fk_*_missing`).
-- **Diretórios omitidos de propósito:** `notebooks/`, `gold/` só serão criados
-  quando a etapa correspondente começar.
+- **Diretórios omitidos de propósito:** `notebooks/` só será criado na etapa BI.
 - **Cloud só no estágio 5 (decisão):** BigQuery sandbox já disponível
   (`engdta.staging`), mas nenhum dataset `bronze/silver/gold` será criado
   antes do estágio 5 — tabelas do sandbox expiram em 60 dias e o free tier
