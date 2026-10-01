@@ -23,8 +23,8 @@ from dashboard.data import filter_period, kpis, load_bq, load_local  # noqa: E40
 
 from financial_pipeline.config import get_project_root  # noqa: E402
 
-st.set_page_config(page_title="Cooperativa Fictícia — KPIs", layout="wide")
-st.title("Cooperativa Fictícia — volume e ticket (dados simulados)")
+st.set_page_config(page_title="Cooperativa — KPIs", layout="wide")
+st.title("Cooperativa — volume e ticket")
 
 SOURCE = os.getenv("DATA_SOURCE", "bq")
 PROJECT = os.getenv("GCP_PROJECT", "engdta")
@@ -82,7 +82,8 @@ col_a, col_b = st.columns(2)
 with col_a:
     st.subheader("Ranking por agência")
     by_branch = frames["agg_branch"].sort_values("total_volume", ascending=False)
-    st.bar_chart(by_branch.set_index("branch_name")["total_volume"])
+    by_branch["agencia"] = by_branch["city"] + " · " + by_branch["branch_id"]
+    st.bar_chart(by_branch.set_index("agencia")["total_volume"])
 with col_b:
     st.subheader("Ticket por tipo")
     by_type = frames["agg_transaction_type"].sort_values("total", ascending=False)
