@@ -31,13 +31,13 @@ def load_local(gold_dir: Path) -> dict[str, pd.DataFrame]:
     return out
 
 
-def load_bq(project: str) -> dict[str, pd.DataFrame]:
-    """Carrega as views do BQ. Retorna os mesmos frames de load_local."""
+def load_bq(project: str, credentials=None) -> dict[str, pd.DataFrame]:
+    """Carrega as views do BQ. `credentials` p/ service account (Cloud)."""
     try:
         from google.cloud import bigquery  # type: ignore
     except ImportError as exc:
         raise RuntimeError("dashboard BQ precisa de google-cloud-bigquery") from exc
-    client = bigquery.Client(project=project)
+    client = bigquery.Client(project=project, credentials=credentials)
     views = {
         "fact_daily_volume": "v_daily_volume",
         "agg_transaction_type": "v_ticket_by_type",

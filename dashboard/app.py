@@ -30,15 +30,29 @@ PROJECT = os.getenv("GCP_PROJECT", "engdta")
 
 
 @st.cache_data(ttl=300)
-def _load(source: str, project: str):
+def _load(source: str, project: str, use_secrets: bool):
     root = get_project_root()
     if source == "local":
         return load_local(root / "data" / "gold")
-    return load_bq(project)
+    creds = None
+    if use_secrets:  # Streamlit Cloud: [gcp_service_account] nos Secrets
+        from google.oauth2 import service_account  # noqa: E402
+
+        try:
+            info = dict(st.secrets["gcp_service_account"])
+        except (KeyError, FileNotFoundError):
+            info = None
+        if info is not None:
+            creds = service_account.Credentials.from_service_account_info(info)
+    return load_bq(project, creds)
 
 
 try:
-    frames = _load(SOURCE, PROJECT)
+    use_secrets = "gcp_service_account" in st.secrets
+except Exception:
+    use_secrets = False
+try:
+    frames = _load(SOURCE, PROJECT, use_secrets)
 except Exception as exc:
     st.error(f"Falha ao carregar fonte `{SOURCE}`: {exc}")
     st.stop()

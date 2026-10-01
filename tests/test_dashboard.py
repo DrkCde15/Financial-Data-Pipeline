@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import pandas as pd
+from unittest.mock import MagicMock, patch
 
-from dashboard.data import filter_period, kpis, load_local
+from dashboard.data import filter_period, kpis, load_bq, load_local
 
 
 def test_kpis_match_gold_semantics() -> None:
@@ -40,3 +41,17 @@ def test_load_local_reads_real_gold() -> None:
                             "agg_branch", "outliers"}
     assert len(frames["fact_daily_volume"]) == 28
     assert len(frames["outliers"]) == 2
+
+
+def test_load_bq_passes_credentials_to_client() -> None:
+    """Service account (Cloud) chega ao Client; default segue None (ADC)."""
+    job = MagicMock()
+    job.to_dataframe.return_value = pd.DataFrame(
+        {"transaction_date": pd.Series([], dtype="datetime64[ns, UTC]")}
+    )
+    with patch("google.cloud.bigquery.Client") as mock_client:
+        mock_client.return_value.query.return_value = job
+        load_bq("proj", credentials="CREDS")
+        assert mock_client.call_args[1].get("credentials") == "CREDS"
+        load_bq("proj")
+        assert mock_client.call_args[1].get("credentials") is None
