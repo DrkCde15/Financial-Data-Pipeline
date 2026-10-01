@@ -25,6 +25,7 @@ data/gold/<tabela>/ingestion_date=YYYY-MM-DD/data.parquet (4 marts)
         │  scripts/load_bigquery.py (load jobs WRITE_TRUNCATE por tabela)
         ▼
 BigQuery engdta.{bronze,silver,gold} (14 tabs + views v_* + checks 01–04)
+        │  dashboard/app.py (Streamlit: KPIs, série, ranking, outliers)
         ▲ agendado por
 dags/financial_pipeline.py (Airflow 2.6, 6 tasks lineares, @daily, {{ ds }})
 ```
@@ -44,6 +45,7 @@ Regras da Bronze (propositalmente mínimas):
 |-------|--------|---------------------|
 | Bronze→Silver→Gold | ✅ pandas local | Tipagem, dedup, quarentena, FKs; 4 marts com grão declarado |
 | Serving | ✅ BigQuery sandbox (único) | `engdta.{bronze,silver,gold}` via load jobs WRITE_TRUNCATE + `sql/bigquery` (views + checks 01–04). Postgres removido em v0.6.0 (era dual serving; BQ cobre o caso) |
+| BI | ✅ Streamlit (v0.7.0, código) | `dashboard/` sobre views BQ (fallback parquet local, `DATA_SOURCE`). Looker Studio segue opcional p/ link público |
 | Orquestração | ✅ Airflow 2.6 | DAG linear 6 tasks, retries=2, `@daily`, backfill `{{ ds }}` + compose (postgres só metadados, podman) |
 | Observabilidade | Métricas de run, alertas | Projeto 4 do portfólio |
 | Fora do sandbox | Particionamento, IAM, benchmark pago | Projeto 5 |

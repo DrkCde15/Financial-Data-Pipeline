@@ -1,0 +1,7 @@
+# Dashboard Streamlit (serving visual da Gold).
+# Uso: streamlit run dashboard/app.py  (ou DATA_SOURCE=local p/ offline)
+streamlit>=1.32
+pandas>=2.0
+pyarrow>=14.0
+google-cloud-bigquery>=3.0
+db-dtypes>=1.0

@@ -7,8 +7,8 @@ Construir um pipeline de dados bancários de uma cooperativa financeira
 para demonstrar competências de Data Engineering Jr/Pleno: SQL, Python,
 PySpark, Delta Lake, BigQuery, ETL/ELT e data quality.
 
-**Escopo desta versão (v0.6.0 — pipeline completo + cloud):**
-`raw → Bronze → Silver → Gold → BigQuery sandbox`,
+**Escopo desta versão (v0.7.0 — pipeline + BI como código):**
+`raw → Bronze → Silver → Gold → BigQuery sandbox → Streamlit`,
 agendado por Airflow 2.6, executável local via `podman compose`, sem Spark.
 Fonte 100% simulada. Serving único: BigQuery (o Postgres do compose é só
 o banco de metadados do Airflow — não entra no pipeline).
@@ -63,7 +63,8 @@ Detalhes: ver `docs/architecture.md` e `sql/README.md`.
 | Ingestão/Transformação | pandas + pyarrow (Parquet) | Delta Lake |
 | Config | python-dotenv + `.env` (`GCP_PROJECT`, `*_DATA_DIR`) | — |
 | Testes | pytest + pytest-cov (BQ mockado, sem sandbox no CI) | Great Expectations / Pandera |
-| Serving | BigQuery sandbox `engdta` (`sql/bigquery`, `load_bigquery.py` via lib) | BI (Power BI/Looker) |
+| Serving | BigQuery sandbox `engdta` (`sql/bigquery`, `load_bigquery.py` via lib) | — |
+| BI | Streamlit (`dashboard/`: KPIs, série, ranking, outliers; BQ ou parquet local) | Looker Studio (link público) |
 | Orquestração | Airflow 2.6 (`dags/`, 6 tasks, `docker-compose.yml`, podman) | — |
 | Cloud extra | — | Benchmark pago / particionamento (fora do sandbox) |
 
@@ -104,7 +105,11 @@ financial-data-pipeline/
 ├── dags/
 │   └── financial_pipeline.py  # Airflow 2.6 (6 tasks lineares, retries=2, @daily)
 ├── docker-compose.yml  # postgres:15 (só metadados do Airflow) + airflow:2.6.3
-├── tests/          # config + bronze + silver + gold + bigquery + dag
+├── dashboard/
+│   ├── app.py            # Streamlit (KPIs, série, ranking, outliers)
+│   ├── data.py           # carga BQ + fallback local (testável, sem streamlit)
+│   └── requirements.txt
+├── tests/          # config + bronze + silver + gold + bigquery + dag + dashboard
 └── docs/architecture.md
 ```
 
@@ -151,11 +156,16 @@ python scripts/load_bigquery.py            # datasets + 14 tabelas + views
 python scripts/load_bigquery.py --checks   # 01–03: 0 violações = pass
 # Só Gold/serving: python scripts/load_bigquery.py --layer gold
 
-# 9. Orquestração (requer podman/docker)
+# 9. BI — Streamlit (dashboard como código, sem clique manual)
+pip install -r dashboard/requirements.txt
+streamlit run dashboard/app.py                 # BQ via ADC
+DATA_SOURCE=local streamlit run dashboard/app.py  # offline (data/gold/)
+
+# 10. Orquestração (requer podman/docker)
 podman compose up -d
 # Airflow UI: http://localhost:8080 (admin/admin) → ative financial_data_pipeline
 
-# 10. Testes
+# 11. Testes
 pytest
 ```
 
