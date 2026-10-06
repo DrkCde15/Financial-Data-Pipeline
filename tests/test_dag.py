@@ -50,3 +50,25 @@ def test_compose_declares_postgres_and_airflow_26() -> None:
     assert "apache/airflow:2.6.3" in compose
     assert "DATABASE_URL" not in compose, "serving Postgres foi removido"
     assert ".config/gcloud" in compose
+
+
+def test_dag_wires_monitoring_callbacks() -> None:
+    """DAG registra runs via callbacks (default_args), com import seguro."""
+    src = DAG_FILE.read_text(encoding="utf-8")
+    assert "from monitoring_callbacks import" in src
+    assert "on_success_callback" in src and "on_failure_callback" in src
+    hook = (get_project_root() / "dags" / "monitoring_callbacks.py").read_text(
+        encoding="utf-8"
+    )
+    assert "record_finished_run" in hook
+    assert "except ImportError" in hook, "hook precisa ser no-op sem monitoring"
+
+
+def test_compose_wires_monitoring() -> None:
+    """Compose monta o src do monitoring e aponta o SQLite p/ o data/ local."""
+    compose = (get_project_root() / "docker-compose.yml").read_text(encoding="utf-8")
+    assert "pipeline-monitoring/src:/opt/monitoring/src" in compose
+    assert "DATABASE_PATH" in compose
+    assert "monitoring.db" in compose
+    gitignore = (get_project_root() / ".gitignore").read_text(encoding="utf-8")
+    assert "monitoring.db" in gitignore

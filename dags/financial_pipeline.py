@@ -28,6 +28,17 @@ except ImportError:  # import seguro p/ testes sem airflow instalado
     BashOperator = None  # type: ignore
     _HAS_AIRFLOW = False
 
+try:
+    # dags/ está no sys.path do scheduler; sem monitoring, vira no-op.
+    from monitoring_callbacks import on_task_failure, on_task_success
+
+    _MONITORING_CALLBACKS = {
+        "on_success_callback": on_task_success,
+        "on_failure_callback": on_task_failure,
+    }
+except ImportError:
+    _MONITORING_CALLBACKS = {}
+
 
 def _cmd(script: str, extra: str = "") -> str:
     ds = "{{ ds }}"
@@ -40,6 +51,7 @@ DEFAULT_ARGS = {
     "depends_on_past": False,
     "retries": 2,
     "retry_delay": timedelta(minutes=5),
+    **_MONITORING_CALLBACKS,
 }
 
 TASK_IDS = [

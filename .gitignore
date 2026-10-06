@@ -19,6 +19,7 @@ pip-wheel-metadata/
 data/bronze/
 data/silver/
 data/gold/
+data/monitoring.db
 *.parquet
 !data/raw/.gitkeep
 

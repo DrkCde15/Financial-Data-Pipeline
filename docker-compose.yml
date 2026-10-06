@@ -18,11 +18,17 @@ x-airflow-env: &airflow-env
   AIRFLOW__CORE__LOAD_EXAMPLES: "false"
   AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
   FINANCIAL_PIPELINE_ROOT: /opt/airflow/financial-data-pipeline
-  PYTHONPATH: /opt/airflow/financial-data-pipeline/src
+  PYTHONPATH: /opt/airflow/financial-data-pipeline/src:/opt/monitoring/src
   GCP_PROJECT: engdta
   BQ_LOCATION: US
   # ADC do host (gcloud auth application-default login) p/ tasks do BigQuery.
   GOOGLE_APPLICATION_CREDENTIALS: /home/airflow/.config/gcloud/application_default_credentials.json
+  # Observabilidade (pipeline-monitoring, ver dags/monitoring_callbacks.py):
+  # callbacks registram uma run por task (dag_id.task_id) neste SQLite.
+  # MIN_ROWS_EXPECTED=0 porque callbacks não reportam linhas (só scripts
+  # instrumentados com monitored_run reportam volume).
+  DATABASE_PATH: /opt/airflow/financial-data-pipeline/data/monitoring.db
+  MIN_ROWS_EXPECTED: "0"
 
 services:
   postgres:
@@ -58,6 +64,7 @@ services:
       - ./src:/opt/airflow/financial-data-pipeline/src
       - ./data:/opt/airflow/financial-data-pipeline/data
       - ./sql:/opt/airflow/financial-data-pipeline/sql
+      - ../pipeline-monitoring/src:/opt/monitoring/src:ro
     command: bash -c "airflow db init && airflow users create --username admin --password admin --firstname Data --lastname Eng --role Admin --email admin@example.com || true"
 
   airflow:
@@ -75,6 +82,7 @@ services:
       - ./src:/opt/airflow/financial-data-pipeline/src
       - ./data:/opt/airflow/financial-data-pipeline/data
       - ./sql:/opt/airflow/financial-data-pipeline/sql
+      - ../pipeline-monitoring/src:/opt/monitoring/src:ro
       - ~/.config/gcloud:/home/airflow/.config/gcloud:ro
     command: bash -c "pip install -q pandas pyarrow google-cloud-bigquery && airflow standalone"
 
